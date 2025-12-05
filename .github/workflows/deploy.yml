@@ -41,7 +41,7 @@ jobs:
           import base64
           import random
           import string
-          
+
           try:
               secret = os.environ['FIREBASE_SECRET']
               

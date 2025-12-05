@@ -152,7 +152,11 @@
         <p class="tagline">We are cooking something <span>[new, and crazy]</span>.</p>
 
         <div class="counter">
-            Alpha Access: <span id="count">--</span> / 100 Approved
+            <span style="font-size: 0.85rem; color: #888;">Alpha Access Request counter: <span id="approvedCount"
+                    style="color: #4CAF50;">--</span> / <span id="totalCount">--</span></span>
+            <!-- Total Requests:  / 100<br>
+            <span style="font-size: 0.85rem; color: #888;">Approved: <span id="approvedCount"
+                    style="color: #4CAF50;">--</span></span> -->
         </div>
 
         <div class="form-group">
@@ -163,7 +167,7 @@
 
         <div id="message" class="message"></div>
 
-        <p class="note">Link sent upon approval.</p>
+        <p class="note">APK download Link will be sent upon approval.</p>
         <p class="note">Contact: <a href="mailto:contact@aigamer.dev" style="color: #6750A4;">contact@aigamer.dev</a>
         </p>
     </div>
@@ -172,29 +176,59 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+    <!-- Local dev config (ignored in production) -->
+    <script src="config.local.js" onerror="console.log('No local config, using production')"></script>
+
     <script>
-        // Obfuscated config - decoded at runtime
-        const _0x = '__ENCRYPTED_CONFIG__';
-        const _k = '__ENCRYPTION_KEY__';
-        function _d(e,k){let r='';for(let i=0;i<e.length;i++)r+=String.fromCharCode(e.charCodeAt(i)^k.charCodeAt(i%k.length));return r;}
-        const firebaseConfig = JSON.parse(_d(atob(_0x),_k));
+        let firebaseConfig;
+
+        // Check if running locally or in production
+        if (window.FIREBASE_CONFIG_LOCAL) {
+            // Local development
+            console.log('🔧 Using local Firebase config');
+            firebaseConfig = window.FIREBASE_CONFIG_LOCAL;
+        } else {
+            // Production - decode encrypted config
+            const _0x = '__ENCRYPTED_CONFIG__';
+            const _k = '__ENCRYPTION_KEY__';
+            function _d(e, k) { let r = ''; for (let i = 0; i < e.length; i++)r += String.fromCharCode(e.charCodeAt(i) ^ k.charCodeAt(i % k.length)); return r; }
+            firebaseConfig = JSON.parse(_d(atob(_0x), _k));
+        }
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Load approved count on page load
-        async function loadCount() {
+        let totalRequests = 0;
+        const MAX_REQUESTS = 100;
+
+        // Load counts on page load
+        async function loadCounts() {
             try {
-                const doc = await db.collection('alpha_stats').doc('global').get();
-                if (doc.exists) {
-                    document.getElementById('count').textContent = doc.data().approved_count || 0;
+                // Get total count of all requests
+                const allRequests = await db.collection('alpha_requests').get();
+                totalRequests = allRequests.size;
+                document.getElementById('totalCount').textContent = totalRequests;
+
+                // Get approved count from stats
+                const statsDoc = await db.collection('alpha_stats').doc('global').get();
+                if (statsDoc.exists) {
+                    document.getElementById('approvedCount').textContent = statsDoc.data().approved_count || 0;
                 } else {
-                    document.getElementById('count').textContent = '0';
+                    document.getElementById('approvedCount').textContent = '0';
+                }
+
+                // Disable form if limit reached
+                if (totalRequests >= MAX_REQUESTS) {
+                    document.getElementById('submitBtn').disabled = true;
+                    document.getElementById('submitBtn').textContent = 'SLOTS FULL';
+                    document.getElementById('emailInput').disabled = true;
+                    document.getElementById('emailInput').placeholder = 'Alpha slots are full';
                 }
             } catch (e) {
-                console.error('Error loading count:', e);
-                document.getElementById('count').textContent = '0';
+                console.error('Error loading counts:', e);
+                document.getElementById('totalCount').textContent = '0';
+                document.getElementById('approvedCount').textContent = '0';
             }
         }
 
@@ -204,9 +238,24 @@
             const btn = document.getElementById('submitBtn');
             const msg = document.getElementById('message');
 
+            // Check if limit reached
+            if (totalRequests >= MAX_REQUESTS) {
+                msg.className = 'message error';
+                msg.textContent = 'Sorry, all 100 alpha slots have been filled!';
+                return;
+            }
+
             if (!email || !email.includes('@')) {
                 msg.className = 'message error';
                 msg.textContent = 'Please enter a valid email.';
+                return;
+            }
+
+            // Check for duplicate email
+            const existing = await db.collection('alpha_requests').where('email', '==', email).get();
+            if (!existing.empty) {
+                msg.className = 'message error';
+                msg.textContent = 'This email has already requested access.';
                 return;
             }
 
@@ -223,14 +272,27 @@
                 msg.className = 'message success';
                 msg.textContent = 'Request received! You will be notified upon approval.';
                 document.getElementById('emailInput').value = '';
+
+                // Update local count
+                totalRequests++;
+                document.getElementById('totalCount').textContent = totalRequests;
+
+                // Disable if now at limit
+                if (totalRequests >= MAX_REQUESTS) {
+                    btn.disabled = true;
+                    btn.textContent = 'SLOTS FULL';
+                    document.getElementById('emailInput').disabled = true;
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Request Access';
+                }
             } catch (e) {
                 console.error('Error:', e);
                 msg.className = 'message error';
                 msg.textContent = 'Something went wrong. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Request Access';
             }
-
-            btn.disabled = false;
-            btn.textContent = 'Request Access';
         }
 
         // Allow Enter key to submit
@@ -238,8 +300,8 @@
             if (e.key === 'Enter') requestAccess();
         });
 
-        // Load count on page load
-        loadCount();
+        // Load counts on page load
+        loadCounts();
     </script>
 </body>
 
