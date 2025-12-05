@@ -35,32 +35,48 @@ jobs:
             echo "✅ Secret detected (Length: ${#FIREBASE_SECRET})"
           fi
 
-          # 2. Execution (Python)
-          python3 -c "
+          # 2. Encrypt and Inject (Python)
+          python3 << 'PYEOF'
           import os
+          import base64
+          import random
+          import string
+          
           try:
               secret = os.environ['FIREBASE_SECRET']
-              with open('index.html', 'r') as f: content = f.read()
               
-              # Strict Replace
-              if '__FIREBASE_CONFIG_JSON__' not in content:
-                  print('::warning::Placeholder not found in source file!')
+              # Generate random encryption key
+              key = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
               
-              new_content = content.replace('__FIREBASE_CONFIG_JSON__', secret)
+              # XOR encrypt then base64 encode
+              encrypted = ''.join(chr(ord(c) ^ ord(key[i % len(key)])) for i, c in enumerate(secret))
+              encoded = base64.b64encode(encrypted.encode('latin-1')).decode('ascii')
               
-              with open('index.html', 'w') as f: f.write(new_content)
-              print('✅ Injection Script Completed')
+              with open('index.html', 'r') as f:
+                  content = f.read()
+              
+              # Replace placeholders
+              if '__ENCRYPTED_CONFIG__' not in content:
+                  print('::warning::Placeholder not found!')
+              
+              content = content.replace('__ENCRYPTED_CONFIG__', encoded)
+              content = content.replace('__ENCRYPTION_KEY__', key)
+              
+              with open('index.html', 'w') as f:
+                  f.write(content)
+              
+              print(f'✅ Config encrypted (key length: {len(key)}, payload: {len(encoded)} chars)')
           except Exception as e:
               print(f'::error::Python Exception: {e}')
               exit(1)
-          "
+          PYEOF
 
           # 3. Post-Flight Verification
-          if grep -q "__FIREBASE_CONFIG_JSON__" index.html; then
+          if grep -q "__ENCRYPTED_CONFIG__\|__ENCRYPTION_KEY__\|__FIREBASE_CONFIG_JSON__" index.html; then
             echo "::error::CRITICAL: Placeholder still exists in index.html after injection!"
             exit 1
           else
-            echo "✅ Verification Passed: Placeholder removed."
+            echo "✅ Verification Passed: All placeholders replaced."
           fi
 
       - name: Minify HTML & JS
@@ -68,28 +84,28 @@ jobs:
           # Use Python for reliable minification (no npm dependency)
           python3 << 'PYEOF'
           import re
-          
+
           with open('index.html', 'r') as f:
               content = f.read()
-          
+
           # Remove HTML comments
           content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
-          
+
           # Remove JS single-line comments (but not URLs with //)
           content = re.sub(r'(?<!:)//[^\n]*', '', content)
-          
+
           # Collapse multiple whitespace/newlines into single space
           content = re.sub(r'\s+', ' ', content)
-          
+
           # Remove spaces around tags
           content = re.sub(r'>\s+<', '><', content)
-          
+
           # Trim
           content = content.strip()
-          
+
           with open('index.html', 'w') as f:
               f.write(content)
-          
+
           print(f"✅ Minification complete ({len(content)} bytes)")
           PYEOF
 

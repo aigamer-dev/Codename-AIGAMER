@@ -173,8 +173,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // The pipeline will replace this EXACT string with the JSON object
-        const firebaseConfig = __FIREBASE_CONFIG_JSON__;
+        // Obfuscated config - decoded at runtime
+        const _0x = '__ENCRYPTED_CONFIG__';
+        const _k = '__ENCRYPTION_KEY__';
+        function _d(e,k){let r='';for(let i=0;i<e.length;i++)r+=String.fromCharCode(e.charCodeAt(i)^k.charCodeAt(i%k.length));return r;}
+        const firebaseConfig = JSON.parse(_d(atob(_0x),_k));
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
