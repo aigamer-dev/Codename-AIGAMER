@@ -63,6 +63,21 @@ jobs:
             echo "✅ Verification Passed: Placeholder removed."
           fi
 
+      - name: Minify HTML & JS
+        run: |
+          # Install html-minifier-terser (includes JS minification)
+          npm install -g html-minifier-terser
+          
+          # Minify index.html (collapses whitespace, minifies inline JS)
+          html-minifier-terser index.html \
+            --collapse-whitespace \
+            --remove-comments \
+            --minify-css true \
+            --minify-js true \
+            -o index.html
+          
+          echo "✅ Minification complete ($(wc -c < index.html) bytes)"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
