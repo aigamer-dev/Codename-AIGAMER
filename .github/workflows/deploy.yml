@@ -24,9 +24,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject Firebase Config
+        env:
+          # Load secret into ENV to avoid shell parsing issues
+          FIREBASE_DATA: ${{ secrets.FIREBASE_WEB_CONFIG }}
         run: |
-          # Replace placeholder with Secret JSON
-          sed -i "s|__FIREBASE_CONFIG_PLACEHOLDER__|${{ secrets.FIREBASE_WEB_CONFIG }}|g" index.html
+          python3 -c "import os; content = open('index.html').read(); open('index.html', 'w').write(content.replace('__FIREBASE_CONFIG_PLACEHOLDER__', os.environ['FIREBASE_DATA']))"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
