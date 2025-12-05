@@ -2,7 +2,7 @@ name: Deploy Landing Page
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -23,12 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Firebase Config
-        env:
-          # Load secret into ENV to avoid shell parsing issues
-          FIREBASE_DATA: ${{ secrets.FIREBASE_WEB_CONFIG }}
+      - name: Generate Config File
         run: |
-          python3 -c "import os; content = open('index.html').read(); open('index.html', 'w').write(content.replace('__FIREBASE_CONFIG_PLACEHOLDER__', os.environ['FIREBASE_DATA']))"
+          # Create config.js with the secret content
+          echo "window.FIREBASE_CONFIG = ${{ secrets.FIREBASE_WEB_CONFIG }};" > config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -36,7 +34,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: "."
 
       - name: Deploy to GitHub Pages
         id: deployment
