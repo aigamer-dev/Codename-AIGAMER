@@ -23,18 +23,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Configuration
+      - name: Safe Injection
         env:
-          # Load secret into Environment Variable (Safe from shell parsing)
           FIREBASE_SECRET: ${{ secrets.FIREBASE_WEB_CONFIG }}
         run: |
+          # 1. Pre-Flight Analysis
+          if [ -z "$FIREBASE_SECRET" ]; then
+            echo "::error::Secret FIREBASE_WEB_CONFIG is empty! Check GitHub Repo Settings."
+            exit 1
+          else
+            echo "✅ Secret detected (Length: ${#FIREBASE_SECRET})"
+          fi
+
+          # 2. Execution (Python)
           python3 -c "
           import os
-          secret = os.environ['FIREBASE_SECRET']
-          content = open('index.html').read()
-          content = content.replace('__FIREBASE_CONFIG_JSON__', secret)
-          open('index.html', 'w').write(content)
+          try:
+              secret = os.environ['FIREBASE_SECRET']
+              with open('index.html', 'r') as f: content = f.read()
+              
+              # Strict Replace
+              if '__FIREBASE_CONFIG_JSON__' not in content:
+                  print('::warning::Placeholder not found in source file!')
+              
+              new_content = content.replace('__FIREBASE_CONFIG_JSON__', secret)
+              
+              with open('index.html', 'w') as f: f.write(new_content)
+              print('✅ Injection Script Completed')
+          except Exception as e:
+              print(f'::error::Python Exception: {e}')
+              exit(1)
           "
+
+          # 3. Post-Flight Verification
+          if grep -q "__FIREBASE_CONFIG_JSON__" index.html; then
+            echo "::error::CRITICAL: Placeholder still exists in index.html after injection!"
+            exit 1
+          else
+            echo "✅ Verification Passed: Placeholder removed."
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
