@@ -23,10 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate Config File
+      - name: Inject Configuration
+        env:
+          # Load secret into Environment Variable (Safe from shell parsing)
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_WEB_CONFIG }}
         run: |
-          # Create config.js with the secret content
-          echo "window.FIREBASE_CONFIG = ${{ secrets.FIREBASE_WEB_CONFIG }};" > config.js
+          python3 -c "
+          import os
+          secret = os.environ['FIREBASE_SECRET']
+          content = open('index.html').read()
+          content = content.replace('__FIREBASE_CONFIG_JSON__', secret)
+          open('index.html', 'w').write(content)
+          "
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
