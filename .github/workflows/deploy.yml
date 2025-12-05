@@ -65,18 +65,33 @@ jobs:
 
       - name: Minify HTML & JS
         run: |
-          # Install html-minifier-terser (includes JS minification)
-          npm install -g html-minifier-terser
+          # Use Python for reliable minification (no npm dependency)
+          python3 << 'PYEOF'
+          import re
           
-          # Minify index.html (collapses whitespace, minifies inline JS)
-          html-minifier-terser index.html \
-            --collapse-whitespace \
-            --remove-comments \
-            --minify-css true \
-            --minify-js true \
-            -o index.html
+          with open('index.html', 'r') as f:
+              content = f.read()
           
-          echo "✅ Minification complete ($(wc -c < index.html) bytes)"
+          # Remove HTML comments
+          content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+          
+          # Remove JS single-line comments (but not URLs with //)
+          content = re.sub(r'(?<!:)//[^\n]*', '', content)
+          
+          # Collapse multiple whitespace/newlines into single space
+          content = re.sub(r'\s+', ' ', content)
+          
+          # Remove spaces around tags
+          content = re.sub(r'>\s+<', '><', content)
+          
+          # Trim
+          content = content.strip()
+          
+          with open('index.html', 'w') as f:
+              f.write(content)
+          
+          print(f"✅ Minification complete ({len(content)} bytes)")
+          PYEOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
