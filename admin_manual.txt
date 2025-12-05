@@ -17,19 +17,6 @@ https://github.com/aigamer-dev/Codename-AIGAMER/releases/tag/v0.0.1-alpha
    f) Manually email them the SECRET RELEASE URL above
 
 --------------------------------------------------------------------------------
-2. HOW TO UPDATE THE LIVE COUNTER
---------------------------------------------------------------------------------
-
-   a) Go to Firestore Database
-   b) Navigate to: alpha_stats → global document
-   c) If document doesn't exist, create it:
-      - Collection: alpha_stats
-      - Document ID: global
-      - Field: approved_count (number)
-   d) Update "approved_count" to the new number
-   e) The landing page will show this count automatically
-
---------------------------------------------------------------------------------
 3. FIRESTORE SECURITY RULES (RECOMMENDED)
 --------------------------------------------------------------------------------
 
@@ -43,11 +30,6 @@ https://github.com/aigamer-dev/Codename-AIGAMER/releases/tag/v0.0.1-alpha
          allow create: if true;
          allow read, update, delete: if false;
        }
-       // Alpha stats: anyone can read, only admin can update
-       match /alpha_stats/{doc} {
-         allow read: if true;
-         allow write: if false;
-       }
      }
    }
 
@@ -57,7 +39,6 @@ https://github.com/aigamer-dev/Codename-AIGAMER/releases/tag/v0.0.1-alpha
 
    Landing Page:    https://aigamer-dev.github.io/Codename-AIGAMER/
    Release (Hidden): https://github.com/aigamer-dev/Codename-AIGAMER/releases/tag/v0.0.1-alpha
-   Source (Private): https://github.com/aigamer-dev/ZENITH
 
 ================================================================================
                               END OF MANUAL
