@@ -210,13 +210,9 @@
                 totalRequests = allRequests.size;
                 document.getElementById('totalCount').textContent = totalRequests;
 
-                // Get approved count from stats
-                const statsDoc = await db.collection('alpha_stats').doc('global').get();
-                if (statsDoc.exists) {
-                    document.getElementById('approvedCount').textContent = statsDoc.data().approved_count || 0;
-                } else {
-                    document.getElementById('approvedCount').textContent = '0';
-                }
+                // Get approved count by querying documents with status == 'approved'
+                const approvedRequests = await db.collection('alpha_requests').where('status', '==', 'approved').get();
+                document.getElementById('approvedCount').textContent = approvedRequests.size;
 
                 // Disable form if limit reached
                 if (totalRequests >= MAX_REQUESTS) {
@@ -245,7 +241,7 @@
                 return;
             }
 
-            if (!email || !email.includes('@')) {
+            if (!email || !email.includes('@gmail.com')) {
                 msg.className = 'message error';
                 msg.textContent = 'Please enter a valid email.';
                 return;
