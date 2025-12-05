@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Codename: AIGAMER</title>
+    <title>PROJECT: A.I.G.A.M.E.R.</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
     <style>
         * {
             box-sizing: border-box;
@@ -148,27 +150,29 @@
 
 <body>
     <div class="container">
-        <h1>Codename: AIGAMER</h1>
-        <p class="tagline">We are cooking something <span>[new, and crazy]</span>.</p>
+        <h1>CODENAME: A.I.G.A.M.E.R.</h1>
+        <p class="tagline"><span>SYSTEM STATUS:</span> CLASSIFIED</p>
+        <p style="color: #666; font-size: 0.9rem; line-height: 1.6; margin: 20px 0 30px 0;">
+            Advanced behavioral telemetry for high-performance operators.<br>
+            A zero-input intelligence engine running in the background.<br>
+            <span style="color: #f44336;">Experimental build. Access restricted.</span>
+        </p>
 
         <div class="counter">
-            <span style="font-size: 0.85rem; color: #888;">Alpha Access Request counter: <span id="approvedCount"
-                    style="color: #4CAF50;">--</span> / <span id="totalCount">--</span></span>
-            <!-- Total Requests:  / 100<br>
-            <span style="font-size: 0.85rem; color: #888;">Approved: <span id="approvedCount"
-                    style="color: #4CAF50;">--</span></span> -->
+            <span style="font-size: 0.85rem; color: #888;">CLEARANCE GRANTED: <span id="approvedCount"
+                    style="color: #4CAF50;">--</span> / <span id="totalCount">--</span> REQUESTS</span>
         </div>
 
         <div class="form-group">
-            <input type="email" id="emailInput" placeholder="your@email.com" required>
+            <input type="email" id="emailInput" placeholder="operator@email.com" required>
             <br>
-            <button class="btn" id="submitBtn" onclick="requestAccess()">Request Access</button>
+            <button class="btn" id="submitBtn" onclick="requestAccess()">REQUEST CLEARANCE</button>
         </div>
 
         <div id="message" class="message"></div>
 
-        <p class="note">APK download Link will be sent upon approval.</p>
-        <p class="note">Contact: <a href="mailto:contact@aigamer.dev" style="color: #6750A4;">contact@aigamer.dev</a>
+        <p class="note">Secure download link transmitted upon clearance approval.</p>
+        <p class="note">Command: <a href="mailto:contact@aigamer.dev" style="color: #6750A4;">contact@aigamer.dev</a>
         </p>
     </div>
 
